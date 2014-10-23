@@ -71,7 +71,7 @@
 	(single-slot Matriculados
 ;+		(comment "Numero de alumnos matriculados")
 		(type INTEGER)
-		(default 100)
+		(default 70)
 		(create-accessor read-write))
 ;+Los siguientes atributos dan la fecha y aula para cada convocatoria/llamamiento
 	(single-slot Llamamiento1
@@ -138,26 +138,83 @@
 		(type INTEGER)
 		(default 100)
 		(create-accessor read-write))
+	(multislot Ocupada
+		(type INSTANCE)
+		(allowed-classes Fecha)
+		(create-accessor read-write))
 )
 (definstances examenes
 	([gradoii] of Grado
 		(Nombre ii))
 	([gradoim] of Grado
 		(Nombre im))
+	([SinFechaExamen] of FechaExamen)
+	([AU01] of Aula
+		(Numero 1)
+		(Aforo 70))
+	([AU02] of Aula
+                (Numero 2)
+                (Aforo 100))
+	([AU03] of Aula
+                (Numero 3)
+                (Aforo 120))
+        ([AU04] of Aula
+                (Numero 4)
+                (Aforo 100))
+	([AU05] of Aula
+                (Numero 5)
+                (Aforo 70))
+        ([AU06] of Aula
+                (Numero 6)
+                (Aforo 60))
+        ([AU07] of Aula
+                (Numero 7)
+                (Aforo 120))
+        ([AU08] of Aula
+                (Numero 8)
+                (Aforo 100))
+	([AU09] of Aula
+                (Numero 9)
+                (Aforo 90))
+        ([AU10] of Aula
+                (Numero 10)
+                (Aforo 100))
+        ([AU11] of Aula
+                (Numero 11)
+                (Aforo 110))
+        ([AU12] of Aula
+                (Numero 12)
+                (Aforo 150))
+        ([AU13] of Aula
+                (Numero 13)
+                (Aforo 70))
+        ([AU14] of Aula
+                (Numero 14)
+                (Aforo 100))
+        ([AU15] of Aula
+                (Numero 15)
+                (Aforo 140))
+        ([AU16] of Aula
+                (Numero 16)
+                (Aforo 120))
+
 	([AS01] of Asignatura
 		(Plan ii)
 		(Curso 1)
 		(Cuatrimestre 1)
+		(Matriculados 70)
 		(NombreAsignatura Algebra))
 	([AS02] of Asignatura
                 (Plan ii)
                 (Curso 1)
 		(Cuatrimestre 1)
+		(Matriculados 50)
                 (NombreAsignatura Calculo))
 	([AS03] of Asignatura
                 (Plan ii)
                 (Curso 1)
 		(Cuatrimestre 1)
+		(Matriculados 120)
                 (NombreAsignatura Fisica))
         ([AS04] of Asignatura
                 (Plan ii)
@@ -364,11 +421,30 @@
                         (case 2 then (slot-insert$ (nth$ ?j ?c) SegundoCuatrimestre 10 ?ins)))
                 )
         )
-
+	(do-for-all-instances((?ins Asignatura)) 
+		(send ?ins put-Llamamiento1 [SinFechaExamen]) 
+		(send ?ins put-Llamamiento2 [SinFechaExamen])
+		(send ?ins put-Convocatoria1 [SinFechaExamen])
+		(send ?ins put-Convocatoria2 [SinFechaExamen])
+	)
 ;	(bind ?o (send [gradoii] get-Primero))
 ;	(printout t ?o crlf)
 ;	(bind ?n (send ?o get-PrimerCuatrimestre))
 ;	(printout t ?n crlf)
 )
+
+(defrule Conv11 "Regla que coloca los examenes de la primera convocatoria del primer cuatrimestre"
+
+	?x <- (object(is-a Asignatura))	
+	(test (eq (send ?x get-Cuatrimestre) 1))
+	(test (or (eq (send ?x get-Llamamiento1) [SinFechaExamen]) (eq (send ?x get-Llamamiento2) [SinFechaExamen]) ))
+	=>
+	;(bind ?x(find-instance ((?y Asignatura)) TRUE))
+	;if (eq ?x:Cuatrimestre 1) 
+	(printout t (send ?x get-NombreAsignatura))
+	(printout t (send ?x get-Llamamiento1) crlf)
+	
+)
+
 
 
