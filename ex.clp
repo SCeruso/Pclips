@@ -103,6 +103,10 @@
 		(allowed-classes Aula)
 		(cardinality 0 3)
 		(create-accessor read-write))
+;;**********************************************
+	(single-slot Prueba
+		(type INTEGER)
+		(create-accessor read-write))
 )
 (defclass Fecha 
 	(is-a USER)
@@ -113,7 +117,8 @@
 		(create-accessor read-write))
 	(single-slot Hora
 		(type SYMBOL)
-		(allowed-symbols M T)
+;+		(comment "M si ocupa medio dia, C si ocupa el dia completo")
+		(allowed-symbols M C)
 		(create-accessor read-write))
 )
 (defclass Dia
@@ -148,7 +153,8 @@
 		(Nombre ii))
 	([gradoim] of Grado
 		(Nombre im))
-	([SinFechaExamen] of FechaExamen)
+	([SinFechaExamen] of FechaExamen
+		(Prueba 7))
 	([AU01] of Aula
 		(Numero 1)
 		(Aforo 70))
@@ -188,15 +194,6 @@
         ([AU13] of Aula
                 (Numero 13)
                 (Aforo 70))
-        ([AU14] of Aula
-                (Numero 14)
-                (Aforo 100))
-        ([AU15] of Aula
-                (Numero 15)
-                (Aforo 140))
-        ([AU16] of Aula
-                (Numero 16)
-                (Aforo 120))
 
 	([AS01] of Asignatura
 		(Plan ii)
@@ -433,17 +430,19 @@
 ;	(printout t ?n crlf)
 )
 
-(defrule Conv11 "Regla que coloca los examenes de la primera convocatoria del primer cuatrimestre"
+(defrule Conv1C1L2 "Regla que coloca los examenes del segundo llamamiento  de la primera convocatoria del primer cuatrimestre"
 
-	?x <- (object(is-a Asignatura))	
-	(test (eq (send ?x get-Cuatrimestre) 1))
-	(test (or (eq (send ?x get-Llamamiento1) [SinFechaExamen]) (eq (send ?x get-Llamamiento2) [SinFechaExamen]) ))
+
+ 	?x <- (object(is-a Asignatura) (Cuatrimestre 1) (Llamamiento2 ?l&:(eq ?l  [SinFechaExamen])))	
+;	(test (eq ?l [SinFechaExamen]))	;;;;;;;;FUNCIONA
+
+;	(test (or (eq (send ?x get-Llamamiento1) [SinFechaExamen]) (eq (send ?x get-Llamamiento2) [SinFechaExamen]) ))
+
 	=>
-	;(bind ?x(find-instance ((?y Asignatura)) TRUE))
-	;if (eq ?x:Cuatrimestre 1) 
-	(printout t (send ?x get-NombreAsignatura))
-	(printout t (send ?x get-Llamamiento1) crlf)
 	
+;	(printout t (eq (send [AS01] get-Llamamiento1) [SinFechaExamen])crlf)
+	(printout t ?x crlf)
+	(printout t (send (send ?x get-Llamamiento2) get-Prueba) crlf)
 )
 
 
