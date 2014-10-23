@@ -19,12 +19,8 @@
 	(single-slot Cuarto
                 (type INSTANCE)
                 (allowed-classes Curso)
-                 (create-accessor read-write)))
-;	(multislot Cursos
-;		(type INSTANCE)
-;		(allowed-classes Cusrso)
-;		(create-accessor read-write)))i
-
+                 (create-accessor read-write))
+)
 (defclass Curso "Clase para almacenar las asignaturas de cada curso"
 	(is-a USER)
 	(role concrete)
@@ -99,12 +95,37 @@
 	(is-a USER)
 	(role concrete)
 	(single-slot Fecha
-		(type INTEGER)
+		(type INSTANCE)
+		(allowed-classes Fecha)
 		(create-accessor read-write))
 	(multislot Aulas
 		(type INSTANCE)
 		(allowed-classes Aula)
 		(cardinality 0 3)
+		(create-accessor read-write))
+)
+(defclass Fecha 
+	(is-a USER)
+	(role concrete)
+	(single-slot Dia
+		(type INSTANCE)
+		(allowed-classes Dia)
+		(create-accessor read-write))
+	(single-slot Hora
+		(type SYMBOL)
+		(allowed-symbols M T)
+		(create-accessor read-write))
+)
+(defclass Dia
+	(is-a USER)
+	(role concrete)
+	(single-slot Mes
+		(type INTEGER)
+		(allowed-values 1 6 7 9)
+		(create-accessor read-write))
+	(single-slot Ndia
+		(type INTEGER)
+		(range 1 31)
 		(create-accessor read-write))
 )
 (defclass Aula
@@ -115,6 +136,7 @@
 		(create-accessor read-write))
 	(single-slot Aforo
 		(type INTEGER)
+		(default 100)
 		(create-accessor read-write))
 )
 (definstances examenes
@@ -348,3 +370,5 @@
 ;	(bind ?n (send ?o get-PrimerCuatrimestre))
 ;	(printout t ?n crlf)
 )
+
+
