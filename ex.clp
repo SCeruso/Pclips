@@ -104,9 +104,9 @@
 		(cardinality 0 3)
 		(create-accessor read-write))
 ;;**********************************************
-	(single-slot Prueba
-		(type INTEGER)
-		(create-accessor read-write))
+;;	(single-slot Prueba
+;;		(type INTEGER)
+;;		(create-accessor read-write))
 )
 (defclass Fecha 
 	(is-a USER)
@@ -130,7 +130,8 @@
 		(create-accessor read-write))
 	(single-slot Ndia
 		(type INTEGER)
-		(range 1 31)
+		(range 0 31)
+		(default 0)
 		(create-accessor read-write))
 )
 (defclass Aula
@@ -154,7 +155,8 @@
 	([gradoim] of Grado
 		(Nombre im))
 	([SinFechaExamen] of FechaExamen
-		(Prueba 7))
+	);;	(Prueba 7))
+
 	([AU01] of Aula
 		(Numero 1)
 		(Aforo 70))
@@ -396,6 +398,9 @@
 (declare (salience 20))
 ;	(bind ?c (find-all-instances ((?g Curso)) TRUE))
 ;	(bind ?b (find-all-instances ((?i Curso)) TRUE))
+	
+;;Si no se ha inicializado el problema:
+	(not (Inicializado))
 	=>	
 	(bind ?g (find-all-instances ((?s Grado)) TRUE))
 	(loop-for-count (?i 1 (length ?g))
@@ -406,10 +411,6 @@
                         (case 4 then (send (nth$ ?i ?g) put-Cuarto ?ins)))
 		)	
 	)
-;;  	(bind ?x (find-instance ((?a Grado)) (eq ?a:Nombre ii)))		
-;;	(bind ?y (send ?x get-Nombre))
-;;	(printout t ?x crlf)
-;;	(printout t  (send (nth 1 ?x) get-Primero) crlf)
 
 	(bind ?c (find-all-instances ((?s Curso)) TRUE))
         (loop-for-count (?j 1 (length ?c))
@@ -428,12 +429,33 @@
 ;	(printout t ?o crlf)
 ;	(bind ?n (send ?o get-PrimerCuatrimestre))
 ;	(printout t ?n crlf)
+	(loop-for-count (?i 1 31) 
+		(make-instance of Dia (Ndia ?i) (Mes 1))
+		(make-instance of Dia (Ndia ?i) (Mes 6))
+		(make-instance of Dia (Ndia ?i) (Mes 7))
+		(make-instance of Dia (Ndia ?i) (Mes 9))
+	)
+	(assert (Inicializado))
 )
 
-(defrule Conv1C1L2 "Regla que coloca los examenes del segundo llamamiento  de la primera convocatoria del primer cuatrimestre"
+(defrule Conv1C1L2 "Regla que coloca los examenes del primer llamamiento  de la primera convocatoria del primer cuatrimestre"
 
 
- 	?x <- (object(is-a Asignatura) (Cuatrimestre 1) (Llamamiento2 ?l&:(eq ?l  [SinFechaExamen])))	
+ 	?x <- (object(is-a Asignatura) (Plan ?plan) (Curso ?curso) (Cuatrimestre 1) (Llamamiento1 ?l & : (eq ?l  [SinFechaExamen])))	
+	?dia <- (object(is-a Dia) (Mes 1) (Ndia ?ndia))
+	(test (<  ?ndia 19))
+	(test (> ?ndia 8))
+	(not
+		(object (is-a Asignatura) (Plan ?plan) (Curso  ?curso) (Cuatrimestre 1) 
+		(Llamamiento1 ?l2 &  
+			: (and (neq(send ?l2 get-Fecha) [nil])
+				(eq (send (send ?l2 get-Fecha) get-Dia) ?dia)))
+		)
+	)
+
+;	 (test (neq (send (send ?l2 get-Fecha) get-Dia) ?dia))
+ 
+
 ;	(test (eq ?l [SinFechaExamen]))	;;;;;;;;FUNCIONA
 
 ;	(test (or (eq (send ?x get-Llamamiento1) [SinFechaExamen]) (eq (send ?x get-Llamamiento2) [SinFechaExamen]) ))
@@ -442,7 +464,7 @@
 	
 ;	(printout t (eq (send [AS01] get-Llamamiento1) [SinFechaExamen])crlf)
 	(printout t ?x crlf)
-	(printout t (send (send ?x get-Llamamiento2) get-Prueba) crlf)
+	(printout t (send ?x get-Llamamiento2) crlf)
 )
 
 
