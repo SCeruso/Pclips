@@ -512,8 +512,8 @@
 
  	?x <- (object(is-a Asignatura) (Plan ?plan) (Curso ?curso) (Cuatrimestre 1) (Llamamiento1 ?l & : (eq ?l  [SinFechaExamen])))	
 	?dia <- (object(is-a Dia) (Mes 1) (Ndia ?ndia))
-	(test (<  ?ndia 19))
-	(test (> ?ndia 8))
+	(test (>  ?ndia 8))
+	(test (< ?ndia 19))
 	(not
 		(object (is-a Asignatura) (Plan ?plan) (Curso  ?curso) (Cuatrimestre 1) 
 		(Llamamiento1 ?l2 &  
@@ -521,13 +521,12 @@
 				(eq (send (send ?l2 get-Fecha) get-Dia) ?dia)))
 		)
 	)
-	?aula <- (object(is-a Aula) (Numero ?Numero) (Aforo ?af & : (>= ?af (send ?x get-Matriculados))) (Ocupada ?Oc))	
-;	(test (neq (send (send ?l2 get-Fecha) get-Dia) ?dia))
+	?aula <- (object(is-a Aula) (Numero ?Numero) (Aforo ?af & : (>= ?af (send ?x get-Matriculados))))	
  
 	(not (object (is-a Asignatura) (Plan ?) (Curso ?) (Cuatrimestre 1)
 		(Llamamiento1 ?l3 & 
-			: (or (eq ?aula (send ?l3 get-Aula)) (and (neq (send ?l3 get-fecha) [nil]) (eq (send (send ?l3 get-Fecha) get-Dia) ?dia))
-			  )
+			:  (and (eq ?aula (send ?l3 get-Aula)) (neq (send ?l3 get-Fecha) [nil]) (eq (send (send ?l3 get-Fecha) get-Dia) ?dia))
+			  
 		)
 	     )
 	)
@@ -544,12 +543,13 @@
 	)
 	(bind ?fechaexamen (make-instance of FechaExamen
 		(Fecha ?fecha)
-		)
+		(Aula ?aula))
 	)
 	(send ?x put-Llamamiento1 ?fechaexamen)
 ;	(printout t (eq (send [AS01] get-Llamamiento1) [SinFechaExamen])crlf)
-	(printout t ?x crlf)
-	(printout t (send ?x get-Llamamiento1) crlf)
+	(send ?x print)
+;	(printout t (send ?aula get-Aforo)crlf) 
+	;(printout t (send ?x get-Llamamiento1) crlf)
 )
 
 
