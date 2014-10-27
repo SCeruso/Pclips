@@ -172,30 +172,6 @@
 	([AU05] of Aula
                 (Numero 5)
                 (Aforo 70))
-        ([AU06] of Aula
-                (Numero 6)
-                (Aforo 60))
-        ([AU07] of Aula
-                (Numero 7)
-                (Aforo 120))
-        ([AU08] of Aula
-                (Numero 8)
-                (Aforo 100))
-	([AU09] of Aula
-                (Numero 9)
-                (Aforo 90))
-        ([AU10] of Aula
-                (Numero 10)
-                (Aforo 100))
-        ([AU11] of Aula
-                (Numero 11)
-                (Aforo 110))
-        ([AU12] of Aula
-                (Numero 12)
-                (Aforo 150))
-        ([AU13] of Aula
-                (Numero 13)
-                (Aforo 70))
 
 	([AS01] of Asignatura
 		(Plan ii)
@@ -464,7 +440,7 @@
 
 
 (defrule ini
-(declare (salience 20))
+(declare (salience 100))
 ;	(bind ?c (find-all-instances ((?g Curso)) TRUE))
 ;	(bind ?b (find-all-instances ((?i Curso)) TRUE))
 	
@@ -499,16 +475,16 @@
 ;	(bind ?n (send ?o get-PrimerCuatrimestre))
 ;	(printout t ?n crlf)
 	(loop-for-count (?i 1 31) 
-		(make-instance of Dia (Ndia ?i) (Mes 1))
-		(make-instance of Dia (Ndia ?i) (Mes 6))
-		(make-instance of Dia (Ndia ?i) (Mes 7))
-		(make-instance of Dia (Ndia ?i) (Mes 9))
+		(make-instance of Dia (Ndia (- 31 ?i)) (Mes 1))
+		(make-instance of Dia (Ndia (- 31 ?i)) (Mes 6))
+		(make-instance of Dia (Ndia (- 31 ?i)) (Mes 7))
+		(make-instance of Dia (Ndia (- 31 ?i)) (Mes 9))
 	)
 	(assert (Inicializado))
 )
 
 (defrule Conv1C1L1 "Regla que coloca los examenes del primer llamamiento  de la primera convocatoria del primer cuatrimestre"
-
+(declare (salience 90))
 
  	?x <- (object(is-a Asignatura) (Plan ?plan) (Curso ?curso) (Cuatrimestre 1) (Llamamiento1 ?l & : (eq ?l  [SinFechaExamen])))	
 	?dia <- (object(is-a Dia) (Mes 1) (Ndia ?ndia))
@@ -530,9 +506,6 @@
 		)
 	     )
 	)
-;	(test (eq ?l [SinFechaExamen]))	;;;;;;;;FUNCIONA
-
-;	(test (or (eq (send ?x get-Llamamiento1) [SinFechaExamen]) (eq (send ?x get-Llamamiento2) [SinFechaExamen]) ))
 
 	=>
 	
@@ -547,10 +520,138 @@
 	)
 	(send ?x put-Llamamiento1 ?fechaexamen)
 ;	(printout t (eq (send [AS01] get-Llamamiento1) [SinFechaExamen])crlf)
-	(send ?x print)
+	;(send ?x print)
 ;	(printout t (send ?aula get-Aforo)crlf) 
 	;(printout t (send ?x get-Llamamiento1) crlf)
 )
 
+(defrule Conv1C1L2 "Regla que coloca los examenes del segundo llamamiento  de la primera convocatoria del primer cuatrimestre"
+(declare (salience 80))
+
+	?x <- (object(is-a Asignatura) (Plan ?plan) (Curso ?curso) (Cuatrimestre 1) (Llamamiento1 ?l0 & : (neq ?l0 [SinFechaExamen])) (Llamamiento2 ?l & : (eq ?l  [SinFechaExamen])))
+        ?dia <- (object(is-a Dia) (Mes 1) (Ndia ?ndia))
+        (test (>  ?ndia 21))
+        (test (< ?ndia 31))
+
+;;;;Tiene que haber un minimo de 5 dias de diferencia entre llamamientos
+	(test  (>= (- ?ndia (send (send (send ?l0 get-Fecha) get-Dia) get-Ndia)) 5))  
+
+        (not
+                (object (is-a Asignatura) (Plan ?plan) (Curso  ?curso) (Cuatrimestre 1)
+                (Llamamiento2 ?l2 &
+                        : (and (neq(send ?l2 get-Fecha) [nil])
+                                (eq (send (send ?l2 get-Fecha) get-Dia) ?dia)))
+                )
+        )
+        ?aula <- (object(is-a Aula) (Numero ?Numero) (Aforo ?af & : (>= ?af (send ?x get-Matriculados))))
+
+        (not (object (is-a Asignatura) (Plan ?) (Curso ?) (Cuatrimestre 1)
+                (Llamamiento2 ?l3 &
+                        :  (and (eq ?aula (send ?l3 get-Aula)) (neq (send ?l3 get-Fecha) [nil]) (eq (send (send ?l3 get-Fecha) get-Dia) ?dia))
+
+                )
+             )
+        )
+
+        =>
+
+        (bind ?fecha (make-instance of Fecha
+                (Dia ?dia)
+                (Hora C)
+                )
+        )
+        (bind ?fechaexamen (make-instance of FechaExamen
+                (Fecha ?fecha)
+                (Aula ?aula))
+        )
+        (send ?x put-Llamamiento2 ?fechaexamen)
+)
+
+(defrule Conv1C2L1 "Regla que coloca los examenes del primer llamamiento de la primera convocatoria del segundo cuatrimestre"
+(declare (salience 70))
+
+        ?x <- (object(is-a Asignatura) (Plan ?plan) (Curso ?curso) (Cuatrimestre 2) (Llamamiento1 ?l & : (eq ?l  [SinFechaExamen])))
+        ?dia <- (object(is-a Dia) (Mes 6) (Ndia ?ndia))
+        (test (>  ?ndia 8))
+        (test (< ?ndia 19))
+
+
+        (not
+                (object (is-a Asignatura) (Plan ?plan) (Curso  ?curso) (Cuatrimestre 2)
+                (Llamamiento2 ?l2 &
+                        : (and (neq(send ?l2 get-Fecha) [nil])
+                                (eq (send (send ?l2 get-Fecha) get-Dia) ?dia)))
+                )
+        )
+        ?aula <- (object(is-a Aula) (Numero ?Numero) (Aforo ?af & : (>= ?af (send ?x get-Matriculados))))
+
+        (not (object (is-a Asignatura) (Plan ?) (Curso ?) (Cuatrimestre 2)
+                (Llamamiento2 ?l3 &
+                        :  (and (eq ?aula (send ?l3 get-Aula)) (neq (send ?l3 get-Fecha) [nil]) (eq (send (send ?l3 get-Fecha) get-Dia) ?dia))
+
+                )
+             )
+        )
+
+        =>
+
+        (bind ?fecha (make-instance of Fecha
+                (Dia ?dia)
+                (Hora C)
+                )
+        )
+        (bind ?fechaexamen (make-instance of FechaExamen
+                (Fecha ?fecha)
+                (Aula ?aula))
+        )
+        (send ?x put-Llamamiento1 ?fechaexamen)
+)
+
+(defrule Conv1C2L2 "Regla que coloca los examenes del segundo llamamiento  de la primera convocatoria del segundo cuatrimestre"
+(declare (salience 60))
+
+        ?x <- (object(is-a Asignatura) (Plan ?plan) (Curso ?curso) (Cuatrimestre ?Cuat) (Llamamiento1 ?l0 & : (neq ?l0 [SinFechaExamen])) (Llamamiento2 ?l & : (eq ?l  [SinFechaExamen])))
+        ?dia <- (object(is-a Dia) (Mes ?M & 
+					: (or (and (eq ?Cuat 1) (eq ?M 1)) 
+					      (and (eq ?Cuat 2) (eq ?M 6))   
+					)
+				  ) (Ndia ?ndia)
+		)
+        (test (>  ?ndia 21))
+        (test (< ?ndia 31))
+
+;;;;Tiene que haber un minimo de 5 dias de diferencia entre llamamientos
+        (test  (>= (- ?ndia (send (send (send ?l0 get-Fecha) get-Dia) get-Ndia)) 5))
+
+        (not
+                (object (is-a Asignatura) (Plan ?plan) (Curso  ?curso) (Cuatrimestre ?Cuat)
+                (Llamamiento2 ?l2 &
+                        : (and (neq(send ?l2 get-Fecha) [nil])
+                                (eq (send (send ?l2 get-Fecha) get-Dia) ?dia)))
+                )
+        )
+        ?aula <- (object(is-a Aula) (Numero ?Numero) (Aforo ?af & : (>= ?af (send ?x get-Matriculados))))
+
+        (not (object (is-a Asignatura) (Plan ?) (Curso ?) (Cuatrimestre ?Cuat)
+                (Llamamiento2 ?l3 &
+                        :  (and (eq ?aula (send ?l3 get-Aula)) (neq (send ?l3 get-Fecha) [nil]) (eq (send (send ?l3 get-Fecha) get-Dia) ?dia))
+
+                )
+             )
+        )
+
+        =>
+
+        (bind ?fecha (make-instance of Fecha
+                (Dia ?dia)
+                (Hora C)
+                )
+        )
+        (bind ?fechaexamen (make-instance of FechaExamen
+                (Fecha ?fecha)
+                (Aula ?aula))
+        )
+        (send ?x put-Llamamiento2 ?fechaexamen)
+)
 
 
