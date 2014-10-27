@@ -438,7 +438,7 @@
 	(assert (Inicializado))
 )
 
-(defrule Conv1C1L2 "Regla que coloca los examenes del primer llamamiento  de la primera convocatoria del primer cuatrimestre"
+(defrule Conv1C1L1 "Regla que coloca los examenes del primer llamamiento  de la primera convocatoria del primer cuatrimestre"
 
 
  	?x <- (object(is-a Asignatura) (Plan ?plan) (Curso ?curso) (Cuatrimestre 1) (Llamamiento1 ?l & : (eq ?l  [SinFechaExamen])))	
@@ -462,9 +462,19 @@
 
 	=>
 	
+	(bind ?fecha (make-instance of Fecha
+		(Dia ?dia)
+		(Hora C)
+		)
+	)
+	(bind ?fechaexamen (make-instance of FechaExamen
+		(Fecha ?fecha)
+		)
+	)
+	(send ?x put-Llamamiento1 ?fechaexamen)
 ;	(printout t (eq (send [AS01] get-Llamamiento1) [SinFechaExamen])crlf)
 	(printout t ?x crlf)
-	(printout t (send ?x get-Llamamiento2) crlf)
+	(printout t (send ?x get-Llamamiento1) crlf)
 )
 
 
