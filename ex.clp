@@ -98,10 +98,10 @@
 		(type INSTANCE)
 		(allowed-classes Fecha)
 		(create-accessor read-write))
-	(multislot Aulas
+	(single-slot Aula
 		(type INSTANCE)
 		(allowed-classes Aula)
-		(cardinality 0 3)
+;		(cardinality 0 3)
 		(create-accessor read-write))
 ;;**********************************************
 ;;	(single-slot Prueba
@@ -118,7 +118,7 @@
 	(single-slot Hora
 		(type SYMBOL)
 ;+		(comment "M si ocupa medio dia, C si ocupa el dia completo")
-		(allowed-symbols M C)
+		(allowed-symbols M T)
 		(create-accessor read-write))
 )
 (defclass Dia
@@ -393,6 +393,75 @@
 		(Plan ii)
 		(Anyo 4))
 )
+;;;;Definicion de mensajes para mostrar resultados
+
+(defmessage-handler Dia print primary()
+;;	(call-next-handler)
+	(printout t ?self:Ndia)
+	(printout t "/")
+	(printout t ?self:Mes)
+	(printout t "/2015" crlf) 
+)
+
+(defmessage-handler Fecha print primary()
+;;      (call-next-handler)
+	(printout t "Dia: ")
+        (send ?self:Dia print)
+        (printout t "Hora: ")
+        (printout t ?self:Hora crlf)
+)
+
+(defmessage-handler FechaExamen print primary()
+;;      (call-next-handler)
+        (send ?self:Fecha print)
+        (printout t "Aula: ")
+        
+	
+;	(loop-for-count (?i 1 (length ?self:Aula))
+;		(printout t (send (nth$ ?i ?self:Aula) get-Numero) " ")
+;	)
+	(if (neq ?self:Aula [nil]) then
+		(printout t (send ?self:Aula get-Numero) " ")
+	)
+	(printout t crlf)
+)
+(defmessage-handler Asignatura print primary()
+;;      (call-next-handler)
+        (printout t ?self:NombreAsignatura crlf)
+        (printout t "Curso: " ?self:Curso crlf)
+        (printout t "Primer llamamiento: " crlf)
+
+	(if (neq ?self:Llamamiento1 [SinFechaExamen]) then
+        	(send ?self:Llamamiento1 print)
+	else 
+		(printout t ?self:Llamamiento1 crlf)
+	)
+
+	(printout t "Segundo llamamiento: " crlf)
+
+	(if (neq ?self:Llamamiento2 [SinFechaExamen]) then
+                (send ?self:Llamamiento2 print)
+        else
+                (printout t ?self:Llamamiento2 crlf)
+        )
+
+	(printout t "Segunda convocatoria: " crlf)
+
+        (if (neq ?self:Convocatoria1 [SinFechaExamen]) then
+                (send ?self:Convocatoria1 print)
+        else
+                (printout t ?self:Convocatoria1 crlf)
+        )
+
+        (printout t "Tercera convocatoria: " crlf)
+        
+	(if (neq ?self:Convocatoria2 [SinFechaExamen]) then
+                (send ?self:Convocatoria2 print)
+        else
+                (printout t ?self:Convocatoria2 crlf)
+        )
+)
+
 
 (defrule ini
 (declare (salience 20))
@@ -452,10 +521,16 @@
 				(eq (send (send ?l2 get-Fecha) get-Dia) ?dia)))
 		)
 	)
-
-;	 (test (neq (send (send ?l2 get-Fecha) get-Dia) ?dia))
+	?aula <- (object(is-a Aula) (Numero ?Numero) (Aforo ?af & : (>= ?af (send ?x get-Matriculados))) (Ocupada ?Oc))	
+;	(test (neq (send (send ?l2 get-Fecha) get-Dia) ?dia))
  
-
+	(not (object (is-a Asignatura) (Plan ?) (Curso ?) (Cuatrimestre 1)
+		(Llamamiento1 ?l3 & 
+			: (or (eq ?aula (send ?l3 get-Aula)) (and (neq (send ?l3 get-fecha) [nil]) (eq (send (send ?l3 get-Fecha) get-Dia) ?dia))
+			  )
+		)
+	     )
+	)
 ;	(test (eq ?l [SinFechaExamen]))	;;;;;;;;FUNCIONA
 
 ;	(test (or (eq (send ?x get-Llamamiento1) [SinFechaExamen]) (eq (send ?x get-Llamamiento2) [SinFechaExamen]) ))
