@@ -438,7 +438,7 @@
 	(assert (Inicializado))
 )
 
-(defrule Conv1C1L2 "Regla que coloca los examenes del primer llamamiento  de la primera convocatoria del primer cuatrimestre"
+(defrule Conv1C1L1 "Regla que coloca los examenes del primer llamamiento  de la primera convocatoria del primer cuatrimestre"
 
 
  	?x <- (object(is-a Asignatura) (Plan ?plan) (Curso ?curso) (Cuatrimestre 1) (Llamamiento1 ?l & : (eq ?l  [SinFechaExamen])))	
