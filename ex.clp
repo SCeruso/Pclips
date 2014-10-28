@@ -98,10 +98,10 @@
 		(type INSTANCE)
 		(allowed-classes Fecha)
 		(create-accessor read-write))
-	(multislot Aulas
+	(single-slot Aula
 		(type INSTANCE)
 		(allowed-classes Aula)
-		(cardinality 0 3)
+;		(cardinality 0 3)
 		(create-accessor read-write))
 ;;**********************************************
 ;;	(single-slot Prueba
@@ -118,7 +118,7 @@
 	(single-slot Hora
 		(type SYMBOL)
 ;+		(comment "M si ocupa medio dia, C si ocupa el dia completo")
-		(allowed-symbols M C)
+		(allowed-symbols M T)
 		(create-accessor read-write))
 )
 (defclass Dia
@@ -171,30 +171,6 @@
                 (Aforo 100))
 	([AU05] of Aula
                 (Numero 5)
-                (Aforo 70))
-        ([AU06] of Aula
-                (Numero 6)
-                (Aforo 60))
-        ([AU07] of Aula
-                (Numero 7)
-                (Aforo 120))
-        ([AU08] of Aula
-                (Numero 8)
-                (Aforo 100))
-	([AU09] of Aula
-                (Numero 9)
-                (Aforo 90))
-        ([AU10] of Aula
-                (Numero 10)
-                (Aforo 100))
-        ([AU11] of Aula
-                (Numero 11)
-                (Aforo 110))
-        ([AU12] of Aula
-                (Numero 12)
-                (Aforo 150))
-        ([AU13] of Aula
-                (Numero 13)
                 (Aforo 70))
 
 	([AS01] of Asignatura
@@ -393,11 +369,78 @@
 		(Plan ii)
 		(Anyo 4))
 )
+;;;;Definicion de mensajes para mostrar resultados
+
+(defmessage-handler Dia print primary()
+;;	(call-next-handler)
+	(printout t ?self:Ndia)
+	(printout t "/")
+	(printout t ?self:Mes)
+	(printout t "/2015" crlf) 
+)
+
+(defmessage-handler Fecha print primary()
+;;      (call-next-handler)
+	(printout t "Dia: ")
+        (send ?self:Dia print)
+        (printout t "Hora: ")
+        (printout t ?self:Hora crlf)
+)
+
+(defmessage-handler FechaExamen print primary()
+;;      (call-next-handler)
+        (send ?self:Fecha print)
+        (printout t "Aula: ")
+        
+	
+;	(loop-for-count (?i 1 (length ?self:Aula))
+;		(printout t (send (nth$ ?i ?self:Aula) get-Numero) " ")
+;	)
+	(if (neq ?self:Aula [nil]) then
+		(printout t (send ?self:Aula get-Numero) " ")
+	)
+	(printout t crlf)
+)
+(defmessage-handler Asignatura print primary()
+;;      (call-next-handler)
+        (printout t ?self:NombreAsignatura crlf)
+        (printout t "Curso: " ?self:Curso crlf)
+        (printout t "Primer llamamiento: " crlf)
+
+	(if (neq ?self:Llamamiento1 [SinFechaExamen]) then
+        	(send ?self:Llamamiento1 print)
+	else 
+		(printout t ?self:Llamamiento1 crlf)
+	)
+
+	(printout t "Segundo llamamiento: " crlf)
+
+	(if (neq ?self:Llamamiento2 [SinFechaExamen]) then
+                (send ?self:Llamamiento2 print)
+        else
+                (printout t ?self:Llamamiento2 crlf)
+        )
+
+	(printout t "Segunda convocatoria: " crlf)
+
+        (if (neq ?self:Convocatoria1 [SinFechaExamen]) then
+                (send ?self:Convocatoria1 print)
+        else
+                (printout t ?self:Convocatoria1 crlf)
+        )
+
+        (printout t "Tercera convocatoria: " crlf)
+        
+	(if (neq ?self:Convocatoria2 [SinFechaExamen]) then
+                (send ?self:Convocatoria2 print)
+        else
+                (printout t ?self:Convocatoria2 crlf)
+        )
+)
+
 
 (defrule ini
-(declare (salience 20))
-;	(bind ?c (find-all-instances ((?g Curso)) TRUE))
-;	(bind ?b (find-all-instances ((?i Curso)) TRUE))
+(declare (salience 100))
 	
 ;;Si no se ha inicializado el problema:
 	(not (Inicializado))
@@ -425,47 +468,258 @@
 		(send ?ins put-Convocatoria1 [SinFechaExamen])
 		(send ?ins put-Convocatoria2 [SinFechaExamen])
 	)
-;	(bind ?o (send [gradoii] get-Primero))
-;	(printout t ?o crlf)
-;	(bind ?n (send ?o get-PrimerCuatrimestre))
-;	(printout t ?n crlf)
 	(loop-for-count (?i 1 31) 
-		(make-instance of Dia (Ndia ?i) (Mes 1))
-		(make-instance of Dia (Ndia ?i) (Mes 6))
-		(make-instance of Dia (Ndia ?i) (Mes 7))
-		(make-instance of Dia (Ndia ?i) (Mes 9))
+		(make-instance of Dia (Ndia (- 31 ?i)) (Mes 1))
+		(make-instance of Dia (Ndia (- 31 ?i)) (Mes 6))
+		(make-instance of Dia (Ndia (- 31 ?i)) (Mes 7))
+		(make-instance of Dia (Ndia (- 31 ?i)) (Mes 9))
 	)
 	(assert (Inicializado))
 )
 
-(defrule Conv1C1L1 "Regla que coloca los examenes del primer llamamiento  de la primera convocatoria del primer cuatrimestre"
+(defrule Conv1L11 "Regla que coloca los examenes del primer llamamiento  de la primera convocatoria de cada  cuatrimestre"
+(declare (salience 90))
+
+        ?x <- (object(is-a Asignatura) (Plan ?plan) (Curso ?curso) (Cuatrimestre ?Cuat) (Llamamiento1 ?l & : (eq ?l  [SinFechaExamen])))
+
+        ?dia <- (object(is-a Dia) (Mes ?M &
+                                        : (or (and (eq ?Cuat 1) (eq ?M 1))
+                                              (and (eq ?Cuat 2) (eq ?M 6))
+                                          )
+                                   ) (Ndia ?ndia)
+                )
+
+        (test (>  ?ndia 8))
+        (test (< ?ndia 19))
+        (not
+                (object (is-a Asignatura) (Plan ?plan) (Curso  ?) (Cuatrimestre ?)
+                (Llamamiento1 ?l2 &
+                        : (and (neq(send ?l2 get-Fecha) [nil])
+                                (eq (send (send ?l2 get-Fecha) get-Dia) ?dia)))
+                )
+        )
+        ?aula <- (object(is-a Aula) (Numero ?Numero) (Aforo ?af & : (>= ?af (send ?x get-Matriculados))))
+
+        (not (object (is-a Asignatura) (Plan ?) (Curso ?) (Cuatrimestre ?Cuat)
+                (Llamamiento1 ?l3 &
+                        :  (and (eq ?aula (send ?l3 get-Aula)) (neq (send ?l3 get-Fecha) [nil]) (eq (send (send ?l3 get-Fecha) get-Dia) ?dia))
+
+                )
+             )
+        )
+
+        =>
+
+        (bind ?fecha (make-instance of Fecha
+                (Dia ?dia)
+                (Hora C)
+                )
+        )
+        (bind ?fechaexamen (make-instance of FechaExamen
+                (Fecha ?fecha)
+                (Aula ?aula))
+        )
+        (send ?x put-Llamamiento1 ?fechaexamen)
+)
 
 
- 	?x <- (object(is-a Asignatura) (Plan ?plan) (Curso ?curso) (Cuatrimestre 1) (Llamamiento1 ?l & : (eq ?l  [SinFechaExamen])))	
-	?dia <- (object(is-a Dia) (Mes 1) (Ndia ?ndia))
-	(test (<  ?ndia 19))
-	(test (> ?ndia 8))
+
+
+(defrule Conv1L12 "Regla que coloca los examenes del primer llamamiento  de la primera convocatoria de cada  cuatrimestre"
+(declare (salience 88))
+
+ 	?x <- (object(is-a Asignatura) (Plan ?plan) (Curso ?curso) (Cuatrimestre ?Cuat) (Llamamiento1 ?l & : (eq ?l  [SinFechaExamen])))	
+	
+	?dia <- (object(is-a Dia) (Mes ?M &
+                                        : (or (and (eq ?Cuat 1) (eq ?M 1))
+                                              (and (eq ?Cuat 2) (eq ?M 6))
+                                          )
+                                   ) (Ndia ?ndia)
+		)
+
+	(test (>  ?ndia 8))
+	(test (< ?ndia 19))
 	(not
-		(object (is-a Asignatura) (Plan ?plan) (Curso  ?curso) (Cuatrimestre 1) 
+		(object (is-a Asignatura) (Plan ?plan) (Curso  ?curso) (Cuatrimestre ?Cuat) 
 		(Llamamiento1 ?l2 &  
 			: (and (neq(send ?l2 get-Fecha) [nil])
 				(eq (send (send ?l2 get-Fecha) get-Dia) ?dia)))
 		)
 	)
-
-;	 (test (neq (send (send ?l2 get-Fecha) get-Dia) ?dia))
+	?aula <- (object(is-a Aula) (Numero ?Numero) (Aforo ?af & : (>= ?af (send ?x get-Matriculados))))	
  
-
-;	(test (eq ?l [SinFechaExamen]))	;;;;;;;;FUNCIONA
-
-;	(test (or (eq (send ?x get-Llamamiento1) [SinFechaExamen]) (eq (send ?x get-Llamamiento2) [SinFechaExamen]) ))
+	(not (object (is-a Asignatura) (Plan ?) (Curso ?) (Cuatrimestre ?Cuat)
+		(Llamamiento1 ?l3 & 
+			:  (and (eq ?aula (send ?l3 get-Aula)) (neq (send ?l3 get-Fecha) [nil]) (eq (send (send ?l3 get-Fecha) get-Dia) ?dia))
+			  
+		)
+	     )
+	)
 
 	=>
 	
-;	(printout t (eq (send [AS01] get-Llamamiento1) [SinFechaExamen])crlf)
-	(printout t ?x crlf)
-	(printout t (send ?x get-Llamamiento2) crlf)
+	(bind ?fecha (make-instance of Fecha
+		(Dia ?dia)
+		(Hora C)
+		)
+	)
+	(bind ?fechaexamen (make-instance of FechaExamen
+		(Fecha ?fecha)
+		(Aula ?aula))
+	)
+	(send ?x put-Llamamiento1 ?fechaexamen)
 )
 
+(defrule Conv1L2 "Regla que coloca los examenes del segundo llamamiento  de la primera convocatoria de cada cuatrimestre"
+(declare (salience 80))
+
+	?x <- (object(is-a Asignatura) (Plan ?plan) (Curso ?curso) (Cuatrimestre ?Cuat) (Llamamiento1 ?l0 & : (neq ?l0 [SinFechaExamen])) (Llamamiento2 ?l & : (eq ?l  [SinFechaExamen])))
+
+	?dia <- (object(is-a Dia) (Mes ?M &
+                                        : (or (and (eq ?Cuat 1) (eq ?M 1))
+                                              (and (eq ?Cuat 2) (eq ?M 6))
+                                       	  )
+                                  ) (Ndia ?ndia)
+		)
+        (test (>  ?ndia 21))
+        (test (< ?ndia 31))
+
+;;;;Tiene que haber un minimo de 5 dias de diferencia entre llamamientos
+	(test  (>= (- ?ndia (send (send (send ?l0 get-Fecha) get-Dia) get-Ndia)) 5))  
+
+        (not
+                (object (is-a Asignatura) (Plan ?plan) (Curso  ?curso) (Cuatrimestre ?Cuat)
+                (Llamamiento2 ?l2 &
+                        : (and (neq(send ?l2 get-Fecha) [nil])
+                                (eq (send (send ?l2 get-Fecha) get-Dia) ?dia)))
+                )
+        )
+        ?aula <- (object(is-a Aula) (Numero ?Numero) (Aforo ?af & : (>= ?af (send ?x get-Matriculados))))
+
+        (not (object (is-a Asignatura) (Plan ?) (Curso ?) (Cuatrimestre ?Cuat)
+                (Llamamiento2 ?l3 &
+                        :  (and (eq ?aula (send ?l3 get-Aula)) (neq (send ?l3 get-Fecha) [nil]) (eq (send (send ?l3 get-Fecha) get-Dia) ?dia))
+
+                )
+             )
+        )
+
+        =>
+
+        (bind ?fecha (make-instance of Fecha
+                (Dia ?dia)
+                (Hora C)
+                )
+        )
+        (bind ?fechaexamen (make-instance of FechaExamen
+                (Fecha ?fecha)
+                (Aula ?aula))
+        )
+        (send ?x put-Llamamiento2 ?fechaexamen)
+)
+
+
+(defrule Conv2 "Regla que coloca los examenes de la segunda convocatoria de cada cuatrimestre"
+(declare (salience 70))
+
+        ?x <- (object(is-a Asignatura) (Plan ?plan) (Curso ?curso) (Cuatrimestre ?Cuat) 
+			(Llamamiento1 ?l0 & : (neq ?l0 [SinFechaExamen])) 
+			(Llamamiento2 ?l & : (neq ?l  [SinFechaExamen])) 
+			(Convocatoria1 ?C1 & : (eq ?C1 [SinFechaExamen]))
+	      )
+
+        ?dia <- (object(is-a Dia) (Mes ?M &
+                                        : (or (and (eq ?Cuat 1) (eq ?M 6))
+                                              (and (eq ?Cuat 2) (eq ?M 7))
+                                          )
+                                  ) (Ndia ?ndia)
+                )
+        (test (>  ?ndia 9))
+        (test (< ?ndia 31))
+
+
+        (not
+                (object (is-a Asignatura) (Plan ?plan) (Curso  ?curso) (Cuatrimestre ?Cuat) (Llamamiento1 ?) (Llamamiento2 ?)
+                (Convocatoria1 ?l2 &
+                        : (and (neq(send ?l2 get-Fecha) [nil])
+                                (eq (send (send ?l2 get-Fecha) get-Dia) ?dia)))
+                )
+        )
+        ?aula <- (object(is-a Aula) (Numero ?Numero) (Aforo ?af & : (>= ?af (send ?x get-Matriculados))))
+
+        (not (object (is-a Asignatura) (Plan ?) (Curso ?) (Cuatrimestre ?) (Llamamiento1 ?) (Llamamiento2 ?)
+                (Convocatoria1 ?l3 &
+                        :  (and (eq ?aula (send ?l3 get-Aula)) (neq (send ?l3 get-Fecha) [nil]) (eq (send (send ?l3 get-Fecha) get-Dia) ?dia))
+
+                )
+             )
+        )
+
+        =>
+
+        (bind ?fecha (make-instance of Fecha
+                (Dia ?dia)
+                (Hora C)
+                )
+        )
+        (bind ?fechaexamen (make-instance of FechaExamen
+                (Fecha ?fecha)
+                (Aula ?aula))
+        )
+        (send ?x put-Convocatoria1 ?fechaexamen)
+)
+
+
+
+(defrule Conv3 "Regla que coloca los examenes de la tercera convocatoria de cada cuatrimestre"
+(declare (salience 60))
+
+        ?x <- (object(is-a Asignatura) (Plan ?plan) (Curso ?curso) (Cuatrimestre ?Cuat)
+                        (Llamamiento1 ?l0 & : (neq ?l0 [SinFechaExamen]))
+                        (Llamamiento2 ?l & : (neq ?l  [SinFechaExamen]))
+                        (Convocatoria1 ?C1 & : (neq ?C1 [SinFechaExamen]))
+			(Convocatoria2 ?C2 & : (eq ?C2 [SinFechaExamen]))
+              )
+
+        ?dia <- (object(is-a Dia) (Mes ?M &
+                                        : (or (and (eq ?Cuat 1) (eq ?M 7))
+                                              (and (eq ?Cuat 2) (eq ?M 9))
+                                          )
+                                  ) (Ndia ?ndia)
+                )
+        (test (>  ?ndia 9))
+        (test (< ?ndia 31))
+
+
+        (not
+                (object (is-a Asignatura) (Plan ?plan) (Curso  ?curso) (Cuatrimestre ?Cuat) (Llamamiento1 ?) (Llamamiento2 ?) (Convocatoria1 ?)
+                (Convocatoria2 ?l2 &
+                        : (and (neq(send ?l2 get-Fecha) [nil])
+                                (eq (send (send ?l2 get-Fecha) get-Dia) ?dia)))
+                )
+        )
+        ?aula <- (object(is-a Aula) (Numero ?Numero) (Aforo ?af & : (>= ?af (send ?x get-Matriculados))))
+
+        (not (object (is-a Asignatura) (Plan ?) (Curso ?) (Cuatrimestre ?) (Llamamiento1 ?) (Llamamiento2 ?) (Convocatoria1 ?)
+                (Convocatoria2 ?l3 &
+                        :  (and (eq ?aula (send ?l3 get-Aula)) (neq (send ?l3 get-Fecha) [nil]) (eq (send (send ?l3 get-Fecha) get-Dia) ?dia))
+
+                )
+             )
+        )
+
+        =>
+ 
+        (bind ?fecha (make-instance of Fecha
+                (Dia ?dia)
+                (Hora C)
+                )
+        )
+        (bind ?fechaexamen (make-instance of FechaExamen
+                (Fecha ?fecha)
+                (Aula ?aula))
+        )
+        (send ?x put-Convocatoria2 ?fechaexamen)
+)
 
 
