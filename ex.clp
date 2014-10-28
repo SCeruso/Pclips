@@ -163,13 +163,13 @@
 	([AU02] of Aula
                 (Numero 2)
                 (Aforo 100))
-;	([AU03] of Aula
-    ;            (Numero 3)
-     ;           (Aforo 120))
-    ;    ([AU04] of Aula
-   ;             (Numero 4)
-  ;              (Aforo 100))
-;	([AU05] of Aula
+	([AU03] of Aula
+                (Numero 3)
+                (Aforo 120))
+         ([AU04] of Aula
+                (Numero 4)
+                (Aforo 100))
+; 	([AU05] of Aula
              ;   (Numero 5)
               ;  (Aforo 70))
 
