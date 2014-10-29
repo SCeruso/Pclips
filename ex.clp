@@ -1160,14 +1160,14 @@
         (send ?x put-Convocatoria2 ?fechaexamen)
 )
 
-(defrule final
-(declare (salience 10))
-	(not (imposible))
-	(not (terminado))
-	=>
-	(Ver-mes 6)
-	(assert (terminado))
-)
+;(defrule final
+;(declare (salience 10))
+;	(not (imposible))
+;	(not (terminado))
+;	=>
+;	(Ver-mes 6)
+;	(assert (terminado))
+;)
 (defrule imposible
 (declare (salience 11))
 	?z <- (object (is-a Asignatura) (Plan ?) (Curso ?) (Cuatrimestre ?) (Llamamiento1 ?l1) (Llamamiento2 ?l2) (Convocatoria1 ?c1) (Convocatoria2 ?c2))
