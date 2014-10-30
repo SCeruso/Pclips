@@ -161,7 +161,7 @@
 	([AU03] of Aula
                 (Numero 3)
                 (Aforo 120))
-         ([AU04] of Aula
+        ([AU04] of Aula
                 (Numero 4)
                 (Aforo 100))
 ; 	([AU05] of Aula
@@ -387,6 +387,8 @@
         (send ?self:Fecha print)
         (printout t "Aula: ")
         
+;;;;Usado para cuando se implemente la funcionalidad de que un examen puede 
+;;;;celebrarse en varias aulas si fuera necesario.
 	
 ;	(loop-for-count (?i 1 (length ?self:Aula))
 ;		(printout t (send (nth$ ?i ?self:Aula) get-Numero) " ")
@@ -497,8 +499,11 @@
 (defrule Conv1L11 "Regla que coloca los examenes del primer llamamiento  de la primera convocatoria de cada  cuatrimestre"
 (declare (salience 90))
 
+;;;;Busca una asignatura que no tenga todavia asignada una fecha para el examen del primer llamamiento.
         ?x <- (object(is-a Asignatura) (Plan ?plan) (Curso ?curso) (Cuatrimestre ?Cuat) (Llamamiento1 ?l & : (eq ?l  [SinFechaExamen])))
 
+;;;;Busca un dia para celebrar el examen que este dentro del rango permitido y que no haya ninguna otra
+;;;;otra asignatura con un examen ese mismo dia.
         ?dia <- (object(is-a Dia) (Mes ?M &
                                         : (or (and (eq ?Cuat 1) (eq ?M 1))
                                               (and (eq ?Cuat 2) (eq ?M 6))
@@ -515,6 +520,8 @@
                                 (eq (send (send ?l2 get-Fecha) get-Dia) ?dia)))
                 )
         )
+;;;Busca un aula donde celebrar el examen que tenga aforo suficiente, no hace falta comprobar la disponibilidad
+;;;gracias a la condicion anterior
         ?aula <- (object(is-a Aula) (Numero ?Numero) (Aforo ?af & : (>= ?af (send ?x get-Matriculados))))
 
 ;;;;Que haya al menos 2 dias de separacion entre examen y examen del mismo cuatrimestre:
@@ -556,6 +563,9 @@
 
         (test (>  ?ndia 8))
         (test (< ?ndia 19))
+
+;;;;En este siguiente caso, perimite que haya solape de examenes un mismo dia, con la
+;;;;unica condicion que no hayan dos examenes del mismo cuatrimestre el mismo dia.
         (not
                 (object (is-a Asignatura) (Plan ?plan) (Curso  ?curso) (Cuatrimestre ?Cuat)
                 (Llamamiento1 ?l2 &
@@ -565,6 +575,7 @@
         )
         ?aula <- (object(is-a Aula) (Numero ?Numero) (Aforo ?af & : (>= ?af (send ?x get-Matriculados))))
 
+;;;;Como puede haber dos examenes un mismo dia, hace falta comprobar la disponibilidad del aula.
         (not (object (is-a Asignatura) (Plan ?) (Curso ?) (Cuatrimestre ?)
                 (Llamamiento1 ?l3 &
                         :  (and (eq ?aula (send ?l3 get-Aula)) (neq (send ?l3 get-Fecha) [nil]) (eq (send (send ?l3 get-Fecha) get-Dia) ?dia))
@@ -597,9 +608,11 @@
 
 )
 
-(defrule Conv1L13 "Regla que coloca los examenes del primer llamamiento  de la primera convocatoria de cada  cuatrimestre"
+(defrule Conv1L13 "Regla que coloca los examenes del primer llamamiento  de la primera convocatoria de cada cuatrimestre"
 (declare (salience 88))
 
+;;;;En esta ultima regla para el primer llamamiento, esta permitido asignar dos examenes a un mismo dia,
+;;;;siempre que haya aulas disponibles, y que tambien hayan dos examenes consecutivos del mismo cuatrimestre.
  	?x <- (object(is-a Asignatura) (Plan ?plan) (Curso ?curso) (Cuatrimestre ?Cuat) (Llamamiento1 ?l & : (eq ?l  [SinFechaExamen])))	
 	
 	?dia <- (object(is-a Dia) (Mes ?M &
