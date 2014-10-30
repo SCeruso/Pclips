@@ -103,10 +103,6 @@
 		(allowed-classes Aula)
 ;		(cardinality 0 3)
 		(create-accessor read-write))
-;;**********************************************
-;;	(single-slot Prueba
-;;		(type INTEGER)
-;;		(create-accessor read-write))
 )
 (defclass Fecha 
 	(is-a USER)
@@ -154,8 +150,7 @@
 		(Nombre ii))
 	([gradoim] of Grado
 		(Nombre im))
-	([SinFechaExamen] of FechaExamen
-	);;	(Prueba 7))
+	([SinFechaExamen] of FechaExamen)
 
 	([AU01] of Aula
 		(Numero 1)
@@ -464,7 +459,7 @@
 (defrule ini
 (declare (salience 100))
 	
-;;Si no se ha inicializado el problema:
+;;;;Si no se ha inicializado el problema:
 	(not (Inicializado))
 	=>	
 	(bind ?g (find-all-instances ((?s Grado)) TRUE))
@@ -490,7 +485,7 @@
 		(send ?ins put-Convocatoria1 [SinFechaExamen])
 		(send ?ins put-Convocatoria2 [SinFechaExamen])
 	)
-	(loop-for-count (?i 1 31) 
+	(loop-for-count (?i 0 22) 
 		(make-instance of Dia (Ndia (- 31 ?i)) (Mes 1))
 		(make-instance of Dia (Ndia (- 31 ?i)) (Mes 6))
 		(make-instance of Dia (Ndia (- 31 ?i)) (Mes 7))
@@ -522,14 +517,6 @@
         )
         ?aula <- (object(is-a Aula) (Numero ?Numero) (Aforo ?af & : (>= ?af (send ?x get-Matriculados))))
 
-        (not (object (is-a Asignatura) (Plan ?) (Curso ?) (Cuatrimestre ?)
-                (Llamamiento1 ?l3 &
-                        :  (and (eq ?aula (send ?l3 get-Aula)) (neq (send ?l3 get-Fecha) [nil]) (eq (send (send ?l3 get-Fecha) get-Dia) ?dia))
-
-                )
-             )
-        )
-
 ;;;;Que haya al menos 2 dias de separacion entre examen y examen del mismo cuatrimestre:
 	(not (object (is-a Asignatura) (Plan ?plan) (Curso ?curso) (Cuatrimestre ?Cuat) 
 		(Llamamiento1 ?l4 & : (and (neq ?l4 [SinFechaExamen])
@@ -551,7 +538,6 @@
                 (Aula ?aula))
         )
         (send ?x put-Llamamiento1 ?fechaexamen)
-;;	(printout t "Yo igual" crlf)
 
 )
 
@@ -608,7 +594,6 @@
                 (Aula ?aula))
         )
         (send ?x put-Llamamiento1 ?fechaexamen)
-;;	(printout t "Yo igual" crlf)
 
 )
 
@@ -683,14 +668,6 @@
         )
         ?aula <- (object(is-a Aula) (Numero ?Numero) (Aforo ?af & : (>= ?af (send ?x get-Matriculados))))
 
-        (not (object (is-a Asignatura) (Plan ?) (Curso ?) (Cuatrimestre ?)
-                (Llamamiento2 ?l3 &
-                        :  (and (eq ?aula (send ?l3 get-Aula)) (neq (send ?l3 get-Fecha) [nil]) (eq (send (send ?l3 get-Fecha) get-Dia) ?dia))
-
-                )
-             )
-        )
-
 ;;;;Que haya al menos 2 dias de separacion entre examen y examen del mismo cuatrimestre:
         (not (object (is-a Asignatura) (Plan ?plan) (Curso ?curso) (Cuatrimestre ?Cuat) (Llamamiento1 ?)
                 (Llamamiento2 ?l4 & : (and (neq ?l4 [SinFechaExamen])
@@ -713,7 +690,6 @@
                 (Aula ?aula))
         )
         (send ?x put-Llamamiento2 ?fechaexamen)
-;;	(printout t "ME EJECUTE" crlf)
 )
 
 (defrule Conv1L22 "Regla que coloca los examenes del segundo llamamiento  de la primera convocatoria de cada cuatrimestre"
@@ -772,7 +748,6 @@
                 (Aula ?aula))
         )
         (send ?x put-Llamamiento2 ?fechaexamen)
-;;	(printout t "ME EJECUTE" crlf)
 )
 
 
@@ -852,14 +827,6 @@
                 )
         )
         ?aula <- (object(is-a Aula) (Numero ?Numero) (Aforo ?af & : (>= ?af (send ?x get-Matriculados))))
-
-        (not (object (is-a Asignatura) (Plan ?) (Curso ?) (Cuatrimestre ?) (Llamamiento1 ?) (Llamamiento2 ?)
-                (Convocatoria1 ?l3 &
-                        :  (and (eq ?aula (send ?l3 get-Aula)) (neq (send ?l3 get-Fecha) [nil]) (eq (send (send ?l3 get-Fecha) get-Dia) ?dia))
-
-                )
-             )
-        )
 
 ;;;;Que haya al menos 2 dias de separacion entre examen y examen del mismo cuatrimestre:
         (not (object (is-a Asignatura) (Plan ?plan) (Curso ?curso) (Cuatrimestre ?Cuat) (Llamamiento1 ?) (Llamamiento2 ?)
@@ -1021,13 +988,6 @@
         )
         ?aula <- (object(is-a Aula) (Numero ?Numero) (Aforo ?af & : (>= ?af (send ?x get-Matriculados))))
 
-        (not (object (is-a Asignatura) (Plan ?) (Curso ?) (Cuatrimestre ?) (Llamamiento1 ?) (Llamamiento2 ?) (Convocatoria1 ?)
-                (Convocatoria2 ?l3 &
-                        :  (and (eq ?aula (send ?l3 get-Aula)) (neq (send ?l3 get-Fecha) [nil]) (eq (send (send ?l3 get-Fecha) get-Dia) ?dia))
-
-                )
-             )
-        )
 ;;;;Que haya al menos 2 dias de separacion entre examen y examen del mismo cuatrimestre:
         (not (object (is-a Asignatura) (Plan ?plan) (Curso ?curso) (Cuatrimestre ?Cuat) (Llamamiento1 ?) (Llamamiento2 ?)
                 (Convocatoria2 ?l4 & : (and (neq ?l4 [SinFechaExamen])
